@@ -128,6 +128,10 @@ public class StompClient {
                         case CLOSED:
                             mConnected = false;
                             isConnecting = false;
+
+                            resetStatus();
+                            lifecycleSub.unsubscribe();
+                            messagesSubscription.unsubscribe();
                             break;
 
                         case ERROR:
