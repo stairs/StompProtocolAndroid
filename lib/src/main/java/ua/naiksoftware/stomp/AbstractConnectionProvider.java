@@ -51,16 +51,8 @@ abstract class AbstractConnectionProvider implements ConnectionProvider {
 
     @Override
     public Completable disconnect() {
-        Observable<Boolean> ex = Observable.error(new IllegalStateException("Attempted to disconnect when already disconnected"));
-
-        Completable block = mConnectionStream
-                .first(isConnected -> isConnected)
-                .timeout(1, TimeUnit.SECONDS, ex)
-                .toCompletable();
-
         return Completable
-                .fromAction(this::rawDisconnect)
-                .startWith(block);
+                .fromAction(this::rawDisconnect);
     }
 
     private Completable initSocket() {
