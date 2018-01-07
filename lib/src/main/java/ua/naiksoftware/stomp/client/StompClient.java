@@ -90,7 +90,10 @@ public class StompClient {
      */
     public void setHeartbeat(int ms) {
         heartbeat = ms;
-        mConnectionProvider.setHeartbeat(ms).subscribe();
+        mConnectionProvider.setHeartbeat(ms).subscribe(
+                () -> Log.d(TAG, "Heartbeat is set successfully."),
+                e -> Log.e(TAG, "Failed to set heartbeat!")
+        );
     }
 
     /**
@@ -118,12 +121,17 @@ public class StompClient {
                             headers.add(new StompHeader(StompHeader.HEART_BEAT, "0," + heartbeat));
                             if (_headers != null) headers.addAll(_headers);
                             mConnectionProvider.send(new StompMessage(StompCommand.CONNECT, headers, null).compile(legacyWhitespace))
-                                    .subscribe();
+                                    .subscribe(() -> Log.d(TAG, "CONNECT frame is sent successfully."),
+                                            e -> Log.e(TAG, "Failed to send CONNECT frame!"));
                             break;
 
                         case CLOSED:
                             mConnected = false;
                             isConnecting = false;
+
+                            resetStatus();
+                            lifecycleSub.unsubscribe();
+                            messagesSubscription.unsubscribe();
                             break;
 
                         case ERROR:
@@ -195,9 +203,13 @@ public class StompClient {
             mStreamMap.put(destPath,
                     mMessageStream
                             .filter(msg -> matches(destPath, msg))
-                            .doOnSubscribe(() -> subscribePath(destPath, headerList).subscribe())
-                            .doOnUnsubscribe(() -> unsubscribePath(destPath).subscribe())
-                            .share()
+                            .doOnSubscribe(() -> subscribePath(destPath, headerList)
+                                    .subscribe(() -> Log.d(TAG, String.format("Subscribed successfully to %s.", destPath)),
+                                            e -> Log.e(TAG, String.format("Failed to subscribe to %s!", destPath))))
+                            .doOnUnsubscribe(() -> unsubscribePath(destPath).subscribe(
+                                    () -> Log.d(TAG, String.format("Unsubscribed successfully from %s.", destPath)),
+                                    e -> Log.e(TAG, String.format("Failed to unsubscribe from %s!", destPath)))
+                            ).share()
             );
         return mStreamMap.get(destPath);
     }
