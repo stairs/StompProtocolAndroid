@@ -60,7 +60,7 @@ abstract class AbstractConnectionProvider implements ConnectionProvider {
 
         Completable block = mConnectionStream
                 .first(isConnected -> !isConnected)
-                .timeout(1, TimeUnit.SECONDS, ex)
+                .timeout(5, TimeUnit.SECONDS, ex)
                 .toCompletable();
 
         return Completable

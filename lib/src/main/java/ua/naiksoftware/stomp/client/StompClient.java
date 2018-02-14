@@ -150,7 +150,7 @@ public class StompClient {
                     mConnected = true;
                     isConnecting = false;
                     mConnectionFuture.complete(true);
-                });
+                }, throwable -> Log.e(TAG, "Failed while observing messages!"));
     }
 
     /**
